@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Data Analysis Report</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .container { margin: 20px; }
+        table { 
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td { 
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        h2 { margin-top: 30px; }
+        pre { 
+            background: #f5f5f5;
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .data-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .metric-box {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .trend {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .trend.positive { color: #28a745; }
+        .trend.negative { color: #dc3545; }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .insights-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .insight-card {
+            background: #fff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .context-header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .detailed-insight {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .detailed-insight ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .detailed-insight li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .detailed-insight li:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+        }
+
+        .alert {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .educational-insights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .insight-card.high { border-color: #dc3545; }
+        .insight-card.medium { border-color: #ffc107; }
+        .insight-card.low { border-color: #28a745; }
+    </style>
+</head>
+<body>
+    <div id="reportContainer"></div>
+
+    <script>
+        function getContextDescription(context, overview) {
+            const descriptions = {
+                'business': `
+                    <p>This dataset appears to be from a ${context} context, containing ${overview.recordCount} records 
+                    across ${overview.columnCount} different metrics. The data spans across ${overview.dateRange}, 
+                    providing insights into business performance and trends.</p>
+                    <p>Key areas analyzed include sales patterns, revenue metrics, and customer behavior.</p>
+                `,
+                'education': `
+                    <p>This educational dataset contains ${overview.recordCount} records spanning 
+                    ${overview.columnCount} different parameters. The data covers ${overview.dateRange}, 
+                    tracking academic performance and related metrics.</p>
+                    <p>Analysis includes student performance, attendance patterns, and course outcomes.</p>
+                `,
+                'healthcare': `
+                    <p>Healthcare records analysis covering ${overview.recordCount} entries across 
+                    ${overview.columnCount} parameters. Data period: ${overview.dateRange}.</p>
+                    <p>Focuses on patient care metrics, treatment outcomes, and operational efficiency.</p>
+                `,
+                'general': `
+                    <p>General purpose dataset with ${overview.recordCount} records and 
+                    ${overview.columnCount} columns, spanning ${overview.dateRange}.</p>
+                    <p>Analysis covers various metrics and their interrelationships.</p>
+                `
+            };
+            return descriptions[context] || descriptions['general'];
+        }
+
+        function generateStatisticalInsights(stats) {
+            let insights = [];
+            for (const [column, values] of Object.entries(stats.numerical || {})) {
+                if (!values) continue;
+
+                // Calculate coefficient of variation
+                const cv = values.std / values.mean * 100;
+                
+                // Analyze distribution
+                const skewness = values.skewness;
+                const kurtosis = values.kurtosis;
+                let distribution = "normally distributed";
+                if (Math.abs(skewness) > 1) {
+                    distribution = skewness > 0 ? "right-skewed" : "left-skewed";
+                }
+                if (Math.abs(kurtosis) > 3) {
+                    distribution += " with heavy tails";
+                }
+
+                insights.push({
+                    column,
+                    metrics: {
+                        mean: values.mean.toFixed(2),
+                        median: values.median.toFixed(2),
+                        cv: cv.toFixed(2) + '%',
+                        distribution
+                    },
+                    analysis: `${column} shows ${distribution} pattern with ${cv > 50 ? 'high' : 'moderate'} variability.`
+                });
+            }
+            return insights;
+        }
+
+        function displayBusinessMetrics(metrics) {
+            if (!metrics) return '';
+            return `
+                <div class="business-metrics">
+                    ${metrics.sales ? `
+                        <div class="metric-section">
+                            <h3>📈 Sales Performance</h3>
+                            <div class="metric-grid">
+                                <div class="stat-card">
+                                    <h4>Revenue</h4>
+                                    <div class="key-metric">$${metrics.sales.total_revenue.toLocaleString()}</div>
+                                    <div class="trend ${metrics.sales.growth_rate >= 0 ? 'positive' : 'negative'}">
+                                        ${metrics.sales.growth_rate >= 0 ? '↗' : '↘'} ${Math.abs(metrics.sales.growth_rate).toFixed(1)}%
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <h4>Avg Transaction</h4>
+                                    <div class="key-metric">$${metrics.sales.average_transaction.toLocaleString()}</div>
+                                </div>
+                            </div>
+                        </div> ` : ''}
+                    ${metrics.products ? `
+                        <div class="metric-section">
+                            <h3>🏆 Product Performance</h3>
+                            <div class="product-analysis">
+                                <div class="top-products">
+                                    <h4>Top Performers</h4>
+                                    ${Object.entries(metrics.products.top_performers).map(([product, stats]) => `
+                                        <div class="product-card">
+                                            <div class="product-name">${product}</div>
+                                            <div class="product-stats">
+                                                Sales: $${stats.sales.sum.toLocaleString()}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${metrics.customer ? `
+                        <div class="metric-section">
+                            <h3>👥 Customer Insights</h3>
+                            <div class="metric-grid">
+                                <div class="stat-card">
+                                    <h4>Customer Base</h4>
+                                    <div class="key-metric">${metrics.customer.total_customers.toLocaleString()}</div>
+                                </div>
+                                <div class="stat-card">
+                                    <h4>Avg Customer Value</h4>
+                                    <div class="key-metric">$${metrics.customer.avg_customer_value.toLocaleString()}</div>
+                                </div>
+                                <div class="stat-card">
+                                    <h4>Retention Rate</h4>
+                                    <div class="key-metric">${metrics.customer.retention_rate?.toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function displayBusinessRecommendations(recommendations) {
+            if (!recommendations || !recommendations.length) return '';
+            return `
+                <div class="recommendations-section">
+                    <h2>🎯 Strategic Recommendations</h2>
+                    <div class="recommendations-grid">
+                        ${recommendations.map(rec => `
+                            <div class="recommendation-card">
+                                <h3>${rec.title}</h3>
+                                <div class="recommendation-content">
+                                    <p>${rec.description}</p>
+                                    <div class="action-items">
+                                        <h4>Action Plan:</h4>
+                                        <ul>
+                                            ${rec.action.split('\n').map(action => `
+                                                <li>${action.trim()}</li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                    <div class="theory-box">
+                                        <h4>📚 Theory & Research:</h4>
+                                        <p>${rec.theory}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateEducationalAnalysis(stats) {
+            let html = `
+                <div class="section">
+                    <h2>📚 Student Performance Analysis</h2>
+                    
+                    <!-- Academic Performance -->
+                    <div class="metric-section">
+                        <h3>Academic Metrics</h3>
+                        <div class="stat-grid">
+                            <!-- CGPA Analysis -->
+                            <div class="stat-card">
+                                <h4>CGPA Distribution</h4>
+                                <div class="metric-box">
+                                    <p>Average: ${stats.numerical.cgpa.mean.toFixed(2)}</p>
+                                    <p>Median: ${stats.numerical.cgpa.median.toFixed(2)}</p>
+                                    <p class="analysis">
+                                        ${interpretCGPA(stats.numerical.cgpa)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Academic Pressure -->
+                            <div class="stat-card">
+                                <h4>Academic Pressure</h4>
+                                <div class="metric-box">
+                                    <p>Average: ${stats.numerical.academic_pressure.mean.toFixed(2)}/5.0</p>
+                                    <p>Distribution: ${interpretPressure(stats.numerical.academic_pressure)}</p>
+                                    <div class="trend ${stats.numerical.academic_pressure.mean > 3.5 ? 'negative' : 'positive'}">
+                                        ${stats.numerical.academic_pressure.mean > 3.5 ? '⚠️ High Stress Levels' : '✓ Manageable Stress'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Depression Risk -->
+                            <div class="stat-card">
+                                <h4>Mental Health Indicators</h4>
+                                <div class="metric-box">
+                                    <p>Depression Risk: ${(stats.numerical.depression.mean * 100).toFixed(1)}%</p>
+                                    <p>Correlation with Academic Pressure: 
+                                       ${calculateCorrelation(stats, 'depression', 'academic_pressure')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workload Analysis -->
+                    <div class="metric-section">
+                        <h3>Study-Life Balance</h3>
+                        <div class="stat-grid">
+                            <div class="stat-card">
+                                <h4>Work-Study Hours</h4>
+                                <div class="metric-box">
+                                    <p>Average: ${stats.numerical.work_study_hours.mean.toFixed(1)} hours/day</p>
+                                    <p>Range: ${stats.numerical.work_study_hours.min.toFixed(1)} - ${stats.numerical.work_study_hours.max.toFixed(1)} hours</p>
+                                    ${interpretWorkload(stats.numerical.work_study_hours)}
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <h4>Satisfaction Levels</h4>
+                                <div class="metric-box">
+                                    <p>Study Satisfaction: ${stats.numerical.study_satisfaction.mean.toFixed(2)}/5.0</p>
+                                    <p>Job Satisfaction: ${stats.numerical.job_satisfaction.mean.toFixed(2)}/5.0</p>
+                                    ${interpretSatisfaction(stats)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            return html;
+        }
+
+        // Helper functions for interpretation
+        function interpretCGPA(cgpaStats) {
+            const avg = cgpaStats.mean;
+            const std = cgpaStats.std;
+            
+            let analysis = [];
+            if (avg > 8.0) analysis.push("Excellent overall performance");
+            else if (avg > 7.0) analysis.push("Good academic standing");
+            else if (avg > 6.0) analysis.push("Moderate performance level");
+            else analysis.push("Needs improvement");
+
+            if (std < 0.5) analysis.push("Very consistent performance");
+            else if (std < 1.0) analysis.push("Moderate grade variation");
+            else analysis.push("High grade fluctuation");
+
+            return analysis.join(". ");
+        }
+
+        function interpretPressure(pressureStats) {
+            const distribution = pressureStats.skewness > 0 ? "right-skewed" : "left-skewed";
+            return `${distribution} distribution indicating ${pressureStats.skewness > 0 ? "peaks of high stress" : "generally manageable pressure"}`;
+        }
+
+        // Update the main loadReport function to include educational analysis
+        async function loadReport() {
+            try {
+                const reportId = new URLSearchParams(window.location.search).get('id');
+                if (!reportId) {
+                    document.getElementById('reportContainer').innerHTML = '<p>Error: No report ID provided</p>';
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:5000/report/${reportId}`);
+                const report = await response.json();
+
+                if (report.error) {
+                    document.getElementById('reportContainer').innerHTML = `<p>Error: ${report.error}</p>`;
+                    return;
+                }
+
+                let html = `
+                    <div class="context-header">
+                        <h1>${report.title}</h1>
+                        ${getContextDescription(report.overview.context, report.overview)}
+                    </div>
+
+                    <div class="data-summary">
+                        <h2>📊 Key Metrics Overview</h2>
+                        <div class="stat-grid">
+                            ${Object.entries(report.statistics.numerical || {}).map(([col, stats]) => `
+                                <div class="stat-card">
+                                    <h3>${col}</h3>
+                                    <div class="metric-box">
+                                        <div>Average: ${stats.mean?.toFixed(2)}</div>
+                                        <div>Range: ${stats.min?.toFixed(2)} - ${stats.max?.toFixed(2)}</div>
+                                        <div class="trend ${(stats.skewness > 0) ? 'positive' : 'negative'}">
+                                            Trend: ${stats.skewness > 0 ? '↗' : '↘'} ${Math.abs(stats.skewness).toFixed(2)}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                html += `
+                    <div class="quality-section">
+                        <h2>🔍 Data Quality Analysis</h2>
+                        <table>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <th>Impact</th>
+                            </tr>
+                            ${Object.entries(report.quality.missingValues || {}).map(([col, missing]) => {
+                                const impactPercent = (missing / report.overview.recordCount * 100).toFixed(2);
+                                const impact = impactPercent > 10 ? 'High' : impactPercent > 5 ? 'Medium' : 'Low';
+                                return `
+                                    <tr>
+                                        <td>${col}</td>
+                                        <td>${missing} missing (${impactPercent}%)</td>
+                                        <td>${impact}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </table>
+                    </div>
+                `;
+
+                html += `
+                    <div class="insights-section">
+                        <h2>📈 Statistical Analysis</h2>
+                        ${generateStatisticalInsights(report.statistics).map(insight => `
+                            <div class="insight-card">
+                                <h3>${insight.column}</h3>
+                                <div class="metric-box">
+                                    <p><strong>Mean:</strong> ${insight.metrics.mean}</p>
+                                    <p><strong>Median:</strong> ${insight.metrics.median}</p>
+                                    <p><strong>Variability:</strong> ${insight.metrics.cv}</p>
+                                    <p><strong>Distribution:</strong> ${insight.metrics.distribution}</p>
+                                    <p class="trend">${insight.analysis}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                if (report.overview.context === 'education') {
+                    html += generateEducationalAnalysis(report.statistics);
+                }
+
+                if (report.overview.context === 'business') {
+                    html += displayBusinessMetrics(report.business_metrics);
+                    html += displayBusinessRecommendations(report.business_recommendations);
+                }
+
+                document.getElementById('reportContainer').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reportContainer').innerHTML = `
+                    <p>Error loading report: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        loadReport();
+    </script>
+</body>
+</html>
