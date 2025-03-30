@@ -1,0 +1,9 @@
+flask>=2.3.0
+flask-cors==3.0.10
+requests==2.31.0
+python-dotenv==1.0.0
+pandas==2.0.0
+openpyxl==3.1.2
+urllib3==2.0.7
+psycopg2-binary==2.9.9
+numpy==1.23.5

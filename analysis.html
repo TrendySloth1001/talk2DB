@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Analysis Report</title>
+    <style>
+        .analysis-report {
+            max-width: 800px;
+            margin: 2rem auto;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .finding {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .confidence-bar {
+            height: 4px;
+            background: #3b82f6;
+            border-radius: 2px;
+            margin: 0.5rem 0;
+        }
+
+        .statistical-context {
+            color: #475569;
+            font-style: italic;
+        }
+
+        .relationships {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .metric {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-left: 4px solid #3b82f6;
+            background: #f1f5f9;
+        }
+
+        .value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .interpretation {
+            margin: 0.5rem 0;
+        }
+
+        .benchmark {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div id="analysis-container" class="analysis-report">
+        <div id="loading">Loading report data...</div>
+    </div>
+
+    <script>
+        // Get report ID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('id');
+
+        // Fetch report data when page loads
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!reportId) {
+                document.getElementById('analysis-container').innerHTML = 
+                    '<div class="error">No report ID provided</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/report/${reportId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayReport(data);
+                } else {
+                    document.getElementById('analysis-container').innerHTML = 
+                        `<div class="error">Error loading report: ${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('analysis-container').innerHTML = 
+                    `<div class="error">Failed to load report: ${error.message}</div>`;
+            }
+        });
+
+        function displayReport(report) {
+            let html = `
+                <h1>${report.title}</h1>
+                <div class="overview">
+                    <h2>Overview</h2>
+                    <p>Records: ${report.overview.recordCount}</p>
+                    <p>Columns: ${report.overview.columnCount}</p>
+                    <p>Date Range: ${report.overview.dateRange}</p>
+                </div>
+            `;
+
+            // Display insights
+            if (report.insights && report.insights.length > 0) {
+                html += '<section class="insights"><h2>Key Insights</h2>';
+                report.insights.forEach(insight => {
+                    html += `
+                        <div class="finding ${insight.severity}">
+                            <h3>${insight.type}</h3>
+                            <p>${insight.message}</p>
+                        </div>
+                    `;
+                });
+                html += '</section>';
+            }
+
+            // Display recommendations
+            if (report.recommendations && report.recommendations.length > 0) {
+                html += '<section class="recommendations"><h2>Recommendations</h2>';
+                report.recommendations.forEach(rec => {
+                    html += `
+                        <div class="metric">
+                            <h3>${rec.title}</h3>
+                            <p class="description">${rec.description}</p>
+                            <p class="action">${rec.action}</p>
+                        </div>
+                    `;
+                });
+                html += '</section>';
+            }
+
+            // Display statistics if available
+            if (report.statistics) {
+                html += '<section class="statistics"><h2>Statistical Analysis</h2>';
+                if (report.statistics.numerical) {
+                    html += '<h3>Numerical Statistics</h3>';
+                    for (const [column, stats] of Object.entries(report.statistics.numerical)) {
+                        html += `
+                            <div class="metric">
+                                <h4>${column}</h4>
+                                <p>Mean: ${stats.mean?.toFixed(2)}</p>
+                                <p>Median: ${stats.median?.toFixed(2)}</p>
+                                <p>Standard Deviation: ${stats.std?.toFixed(2)}</p>
+                            </div>
+                        `;
+                    }
+                }
+                html += '</section>';
+            }
+
+            document.getElementById('analysis-container').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
