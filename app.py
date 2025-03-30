@@ -69,6 +69,11 @@ def serve_static(filename):
     """Serve static files including report.html"""
     return send_from_directory('.', filename)
 
+@app.route('/advanced-analytics')
+def advanced_analytics():
+    """Serve the advanced analytics dashboard"""
+    return send_from_directory('.', 'advanced_analytics.html')
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 

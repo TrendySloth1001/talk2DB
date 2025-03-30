@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Data Analysis</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #60a5fa;
+            --accent-hover: #2563eb;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1e1b4b 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: none;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-out;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            overflow-y: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-primary);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        section {
+            background: rgba(15, 23, 42, 0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            animation: slideIn 0.3s ease-out;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        h2 {
+            color: var(--accent-secondary);
+            border-bottom: 2px solid var(--accent-primary);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .raw-data {
+            background: rgba(15, 23, 42, 0.5);
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            border: 1px solid var(--border-color);
+        }
+
+        .insights-panel {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin: 15px 0;
+        }
+
+        .insight-card {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .data-profile {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .data-type {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin: 3px;
+            font-size: 0.85rem;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .type-number { background: rgba(76, 175, 80, 0.3); }
+        .type-string { background: rgba(33, 150, 243, 0.3); }
+        .type-date { background: rgba(156, 39, 176, 0.3); }
+        .type-boolean { background: rgba(255, 152, 0, 0.3); }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 15px 0;
+        }
+
+        .stats-table th {
+            background: var(--accent-primary);
+            padding: 12px;
+            text-align: left;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .stats-table td {
+            background: rgba(15, 23, 42, 0.3);
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .graph-container {
+            height: 300px;
+            width: 100%;
+            margin: 10px 0;
+            background: rgba(15, 23, 42, 0.2);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dual-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .trend-card {
+            width: 100%;
+            min-height: 300px;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .statistical-insight {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 3rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .correlation-info {
+            margin-bottom: 15px;
+        }
+
+        .correlation-graph {
+            height: 300px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .trend-info {
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Data Analysis</h1>
+        
+        <!-- Raw Data Section -->
+        <section>
+            <h2>Raw Data Preview</h2>
+            <div id="rawData" class="raw-data"></div>
+        </section>
+
+        <!-- Data Profile Section -->
+        <section>
+            <h2>Data Profile</h2>
+            <div id="dataProfile" class="data-profile"></div>
+        </section>
+
+        <!-- Column Analysis -->
+        <section>
+            <h2>Column Analysis</h2>
+            <div id="columnAnalysis" class="insights-panel"></div>
+        </section>
+
+        <!-- Statistical Insights -->
+        <section>
+            <h2>Statistical Insights</h2>
+            <div id="statisticalInsights" class="insights-panel"></div>
+        </section>
+
+        <!-- Patterns & Relationships -->
+        <section>
+            <h2>Patterns & Relationships</h2>
+            <div id="patterns" class="insights-panel"></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        class DataAnalyzer {
+            constructor(data) {
+                this.rawData = data;
+                this.analyze();
+            }
+
+            analyze() {
+                // Show raw data
+                this.displayRawData();
+                
+                // Analyze data profile
+                this.analyzeDataProfile();
+                
+                // Analyze each column
+                this.analyzeColumns();
+                
+                // Generate statistical insights
+                this.generateStatistics();
+                
+                // Find patterns and relationships
+                this.findPatterns();
+            }
+
+            displayRawData() {
+                const rawDataElem = document.getElementById('rawData');
+                rawDataElem.textContent = JSON.stringify(this.rawData.slice(0, 5), null, 2) + 
+                    '\n... ' + (this.rawData.length - 5) + ' more rows';
+            }
+
+            analyzeDataProfile() {
+                const profile = {
+                    rowCount: this.rawData.length,
+                    columnCount: Object.keys(this.rawData[0] || {}).length,
+                    columnTypes: this.detectColumnTypes(),
+                    missingValues: this.detectMissingValues(),
+                    uniqueValues: this.countUniqueValues()
+                };
+
+                const profileHtml = `
+                    <h3>Basic Information</h3>
+                    <p>Total Rows: ${profile.rowCount}</p>
+                    <p>Total Columns: ${profile.columnCount}</p>
+                    
+                    <h3>Column Types</h3>
+                    <div>
+                        ${Object.entries(profile.columnTypes).map(([col, type]) => `
+                            <span class="data-type type-${type.toLowerCase()}">${col}: ${type}</span>
+                        `).join('')}
+                    </div>
+
+                    <h3>Data Quality</h3>
+                    <table class="stats-table">
+                        <tr>
+                            <th>Column</th>
+                            <th>Missing Values</th>
+                            <th>Unique Values</th>
+                        </tr>
+                        ${Object.keys(profile.columnTypes).map(col => `
+                            <tr>
+                                <td>${col}</td>
+                                <td>${profile.missingValues[col] || 0}</td>
+                                <td>${profile.uniqueValues[col] || 0}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                `;
+
+                document.getElementById('dataProfile').innerHTML = profileHtml;
+            }
+
+            detectColumnTypes() {
+                const types = {};
+                const sample = this.rawData[0] || {};
+
+                for (const [key, value] of Object.entries(sample)) {
+                    if (typeof value === 'number') types[key] = 'Number';
+                    else if (!isNaN(Date.parse(value))) types[key] = 'Date';
+                    else if (typeof value === 'boolean') types[key] = 'Boolean';
+                    else types[key] = 'String';
+                }
+
+                return types;
+            }
+
+            detectMissingValues() {
+                const missing = {};
+                Object.keys(this.rawData[0] || {}).forEach(key => {
+                    missing[key] = this.rawData.filter(row => 
+                        row[key] === null || row[key] === undefined || row[key] === ''
+                    ).length;
+                });
+                return missing;
+            }
+
+            countUniqueValues() {
+                const unique = {};
+                Object.keys(this.rawData[0] || {}).forEach(key => {
+                    unique[key] = new Set(this.rawData.map(row => row[key])).size;
+                });
+                return unique;
+            }
+
+            analyzeColumns() {
+                const analysisHtml = Object.entries(this.detectColumnTypes())
+                    .map(([column, type]) => {
+                        const values = this.rawData.map(row => row[column]).filter(v => v != null);
+                        let analysis = `
+                            <div class="insight-card">
+                                <h3>${column}</h3>
+                                <p>Type: ${type}</p>
+                        `;
+
+                        if (type === 'Number') {
+                            const stats = this.calculateNumericStats(values);
+                            analysis += `
+                                <p>Min: ${stats.min}</p>
+                                <p>Max: ${stats.max}</p>
+                                <p>Mean: ${stats.mean.toFixed(2)}</p>
+                                <p>Median: ${stats.median}</p>
+                            `;
+                        } else {
+                            const topValues = this.getTopValues(values);
+                            analysis += `
+                                <p>Most Common Values:</p>
+                                <ul>
+                                    ${topValues.map(v => `<li>${v[0]}: ${v[1]} times</li>`).join('')}
+                                </ul>
+                            `;
+                        }
+
+                        analysis += '</div>';
+                        return analysis;
+                    }).join('');
+
+                document.getElementById('columnAnalysis').innerHTML = analysisHtml;
+            }
+
+            calculateNumericStats(values) {
+                values = values.map(Number).sort((a, b) => a - b);
+                return {
+                    min: Math.min(...values),
+                    max: Math.max(...values),
+                    mean: values.reduce((a, b) => a + b, 0) / values.length,
+                    median: values[Math.floor(values.length / 2)]
+                };
+            }
+
+            getTopValues(values) {
+                const counts = {};
+                values.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                return Object.entries(counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+            }
+
+            calculateCorrelation(col1, col2) {
+                try {
+                    const pairs = this.rawData
+                        .map(row => [parseFloat(row[col1]), parseFloat(row[col2])])
+                        .filter(([a, b]) => 
+                            !isNaN(a) && !isNaN(b) && 
+                            a !== null && b !== null && 
+                            isFinite(a) && isFinite(b)
+                        );
+
+                    if (pairs.length < 2) {
+                        return 0;
+                    }
+
+                    const n = pairs.length;
+                    const sum1 = pairs.reduce((acc, [a, _]) => acc + a, 0);
+                    const sum2 = pairs.reduce((acc, [_, b]) => acc + b, 0);
+                    const sum1sq = pairs.reduce((acc, [a, _]) => acc + a * a, 0);
+                    const sum2sq = pairs.reduce((acc, [_, b]) => acc + b * b, 0);
+                    const pSum = pairs.reduce((acc, [a, b]) => acc + a * b, 0);
+
+                    const num = n * pSum - sum1 * sum2;
+                    const den = Math.sqrt((n * sum1sq - sum1 * sum1) * (n * sum2sq - sum2 * sum2));
+
+                    if (den === 0 || !isFinite(den)) {
+                        return 0;
+                    }
+
+                    const correlation = num / den;
+                    return isFinite(correlation) ? correlation : 0;
+                } catch (error) {
+                    console.error(`Error calculating correlation between ${col1} and ${col2}:`, error);
+                    return 0;
+                }
+            }
+
+            generateStatistics() {
+                const insights = [];
+                const correlationData = {};
+                const numericColumns = Object.entries(this.detectColumnTypes())
+                    .filter(([_, type]) => type === 'Number')
+                    .map(([col, _]) => col);
+
+                if (numericColumns.length >= 2) {
+                    for (let i = 0; i < numericColumns.length; i++) {
+                        for (let j = i + 1; j < numericColumns.length; j++) {
+                            try {
+                                const correlation = this.calculateCorrelation(
+                                    numericColumns[i],
+                                    numericColumns[j]
+                                );
+                                
+                                if (isFinite(correlation) && Math.abs(correlation) > 0.5) {
+                                    insights.push(`
+                                        <div class="statistical-insight">
+                                            <div class="correlation-info">
+                                                <h3>Strong Correlation Found</h3>
+                                                <p>Between ${numericColumns[i]} and ${numericColumns[j]}</p>
+                                                <p>Correlation: ${correlation.toFixed(2)}</p>
+                                            </div>
+                                            <div class="correlation-graph">
+                                                <canvas id="corr_${numericColumns[i]}_${numericColumns[j]}"></canvas>
+                                            </div>
+                                        </div>
+                                    `);
+                                    correlationData[`${numericColumns[i]}_${numericColumns[j]}`] = {
+                                        x: this.rawData.map(row => parseFloat(row[numericColumns[i]])),
+                                        y: this.rawData.map(row => parseFloat(row[numericColumns[j]]))
+                                    };
+                                }
+                            } catch (error) {
+                                console.error('Error in correlation analysis:', error);
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                document.getElementById('statisticalInsights').innerHTML = 
+                    insights.length > 0 ? insights.join('') : '<p>No significant correlations found.</p>';
+
+                Object.entries(correlationData).forEach(([key, data]) => {
+                    const ctx = document.getElementById(`corr_${key}`).getContext('2d');
+                    new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: 'Correlation',
+                                data: data.x.map((x, i) => ({ x, y: data.y[i] })),
+                                backgroundColor: 'rgba(59, 130, 246, 0.5)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                    ticks: { color: '#f1f5f9' }
+                                },
+                                x: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                    ticks: { color: '#f1f5f9' }
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            findPatterns() {
+                const patterns = [];
+                const graphData = {};
+
+                Object.entries(this.detectColumnTypes())
+                    .filter(([_, type]) => type === 'Number')
+                    .forEach(([column, _]) => {
+                        const values = this.rawData.map(row => row[column]).filter(v => v != null);
+                        const trend = this.analyzeTrend(values);
+                        if (trend.significant) {
+                            patterns.push(`
+                                <div class="statistical-insight">
+                                    <div class="trend-info">
+                                        <h3>Trend Detected in ${column}</h3>
+                                        <p>Direction: ${trend.direction}</p>
+                                        <p>Strength: ${trend.strength}</p>
+                                    </div>
+                                    <div class="correlation-graph">
+                                        <canvas id="trend_${column}"></canvas>
+                                    </div>
+                                </div>
+                            `);
+                            graphData[column] = values;
+                        }
+                    });
+
+                document.getElementById('patterns').innerHTML = patterns.join('');
+
+                Object.entries(graphData).forEach(([column, values]) => {
+                    const ctx = document.getElementById(`trend_${column}`).getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({ length: values.length }, (_, i) => i + 1),
+                            datasets: [{
+                                label: column,
+                                data: values,
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    labels: { color: '#f1f5f9' }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                    ticks: { color: '#f1f5f9' }
+                                },
+                                x: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                    ticks: { color: '#f1f5f9' }
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            analyzeTrend(values) {
+                const n = values.length;
+                let increasing = 0;
+                let decreasing = 0;
+
+                for (let i = 1; i < n; i++) {
+                    if (values[i] > values[i-1]) increasing++;
+                    else if (values[i] < values[i-1]) decreasing++;
+                }
+
+                const strength = Math.abs(increasing - decreasing) / (n - 1);
+                return {
+                    significant: strength > 0.3,
+                    direction: increasing > decreasing ? 'Increasing' : 'Decreasing',
+                    strength: strength.toFixed(2)
+                };
+            }
+        }
+
+        window.onload = () => {
+            const storedData = localStorage.getItem('analysisData');
+            if (storedData) {
+                const data = JSON.parse(storedData);
+                new DataAnalyzer(data);
+            } else {
+                document.body.innerHTML = '<h1>No data available for analysis</h1>';
+            }
+        };
+    </script>
+</body>
+</html>

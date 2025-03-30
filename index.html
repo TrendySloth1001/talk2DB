@@ -46,13 +46,15 @@
             background: linear-gradient(135deg, var(--bg-primary) 0%, #1e1b4b 100%);
             color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
             line-height: 1.6;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            max-width: none;
+            min-height: 100vh;
+            margin: 0;
             padding: 2rem;
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(10px);
@@ -60,14 +62,11 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             animation: fadeIn 0.5s ease-out;
+            padding-top: 80px;  /* Increase padding-top to account for fixed appbar height */
         }
 
         h1 {
-            text-align: center;
-            color: var(--accent-primary);
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-            animation: float 3s ease-in-out infinite;
+            display: none;  /* Hide the main heading */
         }
 
         .tabs {
@@ -146,13 +145,17 @@
             background: rgba(15, 23, 42, 0.3);
             border-radius: 8px;
             padding: 1.5rem;
+            min-height: 300px;
+            height: auto;
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
         }
 
         .results-content {
-            max-height: 500px;
+            max-height: 100%;
             overflow-y: auto;
             overflow-x: auto;
-            margin-top: 70px;
+            margin-top: 80px;
             border-radius: 6px;
             background: rgba(15, 23, 42, 0.2);
             padding: 1rem;
@@ -183,11 +186,21 @@
             left: 15px;
             right: 15px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             padding: 10px;
             background: rgba(15, 23, 42, 0.4);
             border-radius: 6px;
+            z-index: 10;
+        }
+
+        .control-panel {
+            position: relative;
+            z-index: 20;
+            padding: 0.5rem;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 6px;
+            margin-bottom: 1rem;
         }
 
         .results table {
@@ -236,12 +249,17 @@
         }
 
         .chart-container {
+            min-height: 400px;
             background: rgba(15, 23, 42, 0.3);
             padding: 1rem;
             border-radius: 8px;
-            margin-top: 1.5rem;
-            height: 400px;
+            margin-top: 3rem;
             position: relative;
+            display: none;
+        }
+
+        .chart-container.active {
+            display: block;
         }
 
         .schema-card {
@@ -298,7 +316,9 @@
         }
 
         .custom-file-upload {
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             padding: 12px 20px;
             background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
             border-radius: 8px;
@@ -313,8 +333,15 @@
         }
 
         .file-name {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            vertical-align: middle;
             margin-left: 10px;
-            color: var(--text-secondary);
+            color: var(--text-primary);
+            font-weight: 500;
         }
 
         input[type="file"] {
@@ -367,8 +394,8 @@
         }
 
         .analyze-btn {
-            padding: 8px 12px;
-            background: var(--accent-primary);
+            padding: 10px 20px;
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -376,13 +403,20 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.9rem;
-            margin-left: 0.5rem;
+            font-weight: 500;
+            margin-left: 0;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 20;
         }
 
         .chart-selector {
             display: flex;
             gap: 1rem;
-            margin: 1rem 0;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 6px;
             flex-wrap: wrap;
         }
 
@@ -409,98 +443,134 @@
             border-color: var(--accent-secondary);
         }
 
+        .notification {
+            position: fixed;
+            top: 84px; /* Change from 20px to 84px (appbar height 64px + 20px margin) */
+            right: 20px;
+            padding: 12px 20px;
+            max-width: 400px; /* Add max-width for better readability */
+            background: rgba(15, 23, 42, 0.9);
+            border-left: 4px solid var(--accent-primary);
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateX(120%);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            z-index: 2000; /* Ensure higher z-index than appbar */
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .notification.hide {
+            transform: translateX(120%);
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .notification.success {
+            border-left-color: var(--success);
+        }
+
+        .notification.error {
+            border-left-color: var(--error);
+        }
+
         @media (max-width: 768px) {
             .close-modal {
                 padding: 0.4rem 0.8rem;
                 font-size: 0.8rem;
             }
         }
+
+        .appbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1500; /* Lower than notification but still high enough for other elements */
+            border-bottom: 1px solid var(--border-color);
+            height: 64px;  /* Fixed height for appbar */
+        }
+
+        .appbar-title {
+            color: var(--accent-primary);
+            font-size: 1.75rem;  /* Increase title size since it's now the main heading */
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .appbar-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .appbar-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .appbar-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .about-section {
+            margin-top: 4rem;
+            padding: 2rem;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .about-card {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .about-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .about-card h3 {
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.2.0/dist/chartjs-chart-matrix.min.js"></script>
-</head>
-<body>
-    <div class="container">
-        <h1>Natural Language to SQL Query Generator</h1>
-        
-        <div class="tabs">
-            <button onclick="showTab('upload')" id="uploadTab" class="tab-button">
-                Upload File
-            </button>
-            <button onclick="showTab('connect')" id="connectTab" class="tab-button">
-                Connect Database
-            </button>
-        </div>
-
-        <div id="uploadSection" class="form-section">
-            <label class="custom-file-upload">
-                <input type="file" id="fileInput" accept=".db,.xlsx,.xls,.csv">
-                📂 Choose File
-                <span id="fileName" class="file-name">No file chosen</span>
-            </label>
-            <button onclick="uploadFile()" class="tab-button">Upload File</button>
-        </div>
-
-        <div id="connectSection" class="form-section" style="display: none;">
-            <input type="text" class="input-field" id="dbHost" placeholder="Host (e.g., localhost)">
-            <input type="text" class="input-field" id="dbPort" placeholder="Port">
-            <input type="text" class="input-field" id="dbName" placeholder="Database Name">
-            <input type="text" class="input-field" id="dbUser" placeholder="Username">
-            <input type="password" class="input-field" id="dbPassword" placeholder="Password">
-            <button onclick="connectDB()" class="tab-button">Connect Database</button>
-        </div>
-
-        <div id="schemaInfo" class="results"></div>
-
-        <textarea id="nlQuery" class="input-field" placeholder="Enter your query in natural language (e.g., 'Show me total sales for last 7 days')"></textarea>
-        <button onclick="generateQuery()" class="tab-button">Generate & Execute Query</button>
-        
-        <div id="sqlQuery" class="results"></div>
-        
-        <div class="format-selector">
-            <div class="format-option active" onclick="setFormat('table')">
-                📊 Table View
-            </div>
-            <div class="format-option" onclick="setFormat('json')">
-                { } JSON View
-            </div>
-            <div class="format-option" onclick="setFormat('csv')">
-                📑 CSV View
-            </div>
-        </div>
-        <div id="result" class="results">
-            <div class="table-controls">
-                <div class="table-pagination">
-                    <button class="tab-button" onclick="previousPage()">Previous</button>
-                    <span class="page-info">Page <span id="currentPage">1</span></span>
-                    <button class="tab-button" onclick="nextPage()">Next</button>
-                </div>
-                <div>
-                    <button class="download-btn" onclick="downloadResults()">💾 Download</button>
-                    <button class="analyze-btn" onclick="openAnalysis()">🔍 Analyze Data</button>
-                </div>
-            </div>
-            <div class="results-content"></div>
-        </div>
-        <div class="chart-selector">
-            <div class="chart-type" data-type="table">📊 Table</div>
-            <div class="chart-type" data-type="bar">📊 Bar Chart</div>
-            <div class="chart-type" data-type="line">📈 Line Chart</div>
-            <div class="chart-type" data-type="pie">🥧 Pie Chart</div>
-            <div class="chart-type" data-type="scatter">🔴 Scatter Plot</div>
-            <div class="chart-type" data-type="heatmap">🌡️ Heatmap</div>
-            <div class="chart-type" data-type="histogram">📊 Histogram</div>
-            <div class="chart-type" data-type="gauge">⏳ Gauge</div>
-        </div>
-        <div class="chart-container">
-            <canvas id="chartContainer"></canvas>
-        </div>
-
-        <div id="loading" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <span class="loader"></span>
-        </div>
-    </div>
-
     <script>
         let currentFormat = 'table';
         let currentResults = null;
@@ -516,22 +586,19 @@
                 this.suggestions = suggestions || { suitable_charts: [] };
                 this.chart = null;
                 
-                // Clear any existing canvas content
-                const ctx = this.canvas.getContext('2d');
-                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.destroyChart();  // Ensure any existing chart is destroyed
             }
 
             destroyChart() {
                 if (this.chart) {
                     this.chart.destroy();
                     this.chart = null;
-                    
-                    // Clear canvas completely
+                }
+                
+                // Clear canvas
+                if (this.canvas) {
                     const ctx = this.canvas.getContext('2d');
                     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                    
-                    // Reset canvas dimensions to force redraw
-                    this.canvas.width = this.canvas.width;
                 }
             }
 
@@ -769,31 +836,36 @@
         }
 
         function generateTableHtml(data) {
-            if (!data || data.length === 0) return '<p>No results to display</p>';
-            
-            filteredData = [...data];
-            const start = (currentPage - 1) * rowsPerPage;
-            const paginatedData = filteredData.slice(start, start + rowsPerPage);
-            
-            const headers = Object.keys(data[0]);
-            let tableHtml = '<table><tr>';
-            
-            headers.forEach(key => {
-                tableHtml += `<th onclick="sortTable('${key}')">${key}</th>`;
-            });
-            tableHtml += '</tr>';
+            if (!data || !data.length) {
+                return '<p>No data to display</p>';
+            }
 
-            paginatedData.forEach(row => {
-                tableHtml += '<tr>';
+            try {
+                filteredData = [...data];
+                const start = (currentPage - 1) * rowsPerPage;
+                const paginatedData = filteredData.slice(start, start + rowsPerPage);
+                const headers = Object.keys(data[0]);
+                
+                let tableHtml = '<table><tr>';
                 headers.forEach(key => {
-                    tableHtml += `<td>${row[key]}</td>`;
+                    tableHtml += `<th onclick="sortTable('${key}')">${key}</th>`;
                 });
                 tableHtml += '</tr>';
-            });
-            tableHtml += '</table>';
-            
-            document.getElementById('currentPage').textContent = currentPage;
-            return tableHtml;
+
+                paginatedData.forEach(row => {
+                    tableHtml += '<tr>';
+                    headers.forEach(key => {
+                        tableHtml += `<td>${row[key] ?? ''}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</table>';
+                
+                return tableHtml;
+            } catch (error) {
+                console.error('Error generating table:', error);
+                return '<p>Error generating table</p>';
+            }
         }
 
         async function resetUI() {
@@ -807,7 +879,7 @@
             const file = fileInput.files[0];
             
             if (!file) {
-                alert('Please select a file first');
+                showNotification('Please select a file first', 'error');
                 return;
             }
 
@@ -824,14 +896,14 @@
                 const result = await response.json();
                 if (result.error) {
                     await resetUI();
-                    alert(result.error);
+                    showNotification(result.error, 'error');
                 } else {
-                    alert('File uploaded successfully');
+                    showNotification('File uploaded successfully', 'success');
                     await updateSchema();
                 }
             } catch (error) {
                 await resetUI();
-                alert('Error uploading file: ' + error.message);
+                showNotification('Error uploading file: ' + error.message, 'error');
             } finally {
                 hideLoading();
             }
@@ -891,9 +963,16 @@
             const sqlQueryDiv = document.getElementById('sqlQuery');
             const resultContent = document.querySelector('#result .results-content');
 
+            if (!nlQuery) {
+                showNotification('Please enter a query', 'error');
+                hideLoading();
+                return;
+            }
+
             try {
-                sqlQueryDiv.innerHTML = '';
-                resultContent.innerHTML = '';
+                // Clear previous results with null checks
+                if (sqlQueryDiv) sqlQueryDiv.innerHTML = '';
+                if (resultContent) resultContent.innerHTML = '';
                 
                 const response = await fetch('http://localhost:5000/generate-query', {
                     method: 'POST',
@@ -906,67 +985,121 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    resultContent.innerHTML = `<strong>Error:</strong><br>${data.error}`;
+                    if (resultContent) {
+                        resultContent.innerHTML = `<div class="error-message"><strong>Error:</strong><br>${data.error}</div>`;
+                    }
+                    showNotification(data.error, 'error');
                     return;
                 }
 
-                if (data.sql_query) {
-                    sqlQueryDiv.innerHTML = `<strong>Generated SQL:</strong><br>${data.sql_query}`;
+                // Update SQL query display with null check
+                if (data.sql_query && sqlQueryDiv) {
+                    sqlQueryDiv.innerHTML = `
+                        <div class="sql-query-container">
+                            <strong>Generated SQL:</strong>
+                            <pre>${data.sql_query}</pre>
+                        </div>`;
                 }
                 
+                // Display results if available
                 if (data.results && data.results.length > 0) {
                     displayResults(data.results, data.visualizations);
-                } else {
+                    showNotification('Query executed successfully', 'success');
+                } else if (resultContent) {
                     resultContent.innerHTML = '<p>No results found</p>';
+                    showNotification('No results found', 'info');
                 }
 
             } catch (error) {
-                resultContent.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+                console.error('Query execution error:', error);
+                if (resultContent) {
+                    resultContent.innerHTML = `<div class="error-message"><strong>Error:</strong><br>${error.message}</div>`;
+                }
+                showNotification('Error executing query', 'error');
             } finally {
                 hideLoading();
             }
         }
 
-        function displayFormattedData(data, format) {
-            const resultContent = document.querySelector('#result .results-content');
-            switch(format) {
-                case 'json':
-                    resultContent.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                    break;
-                case 'csv':
-                    resultContent.innerHTML = generateCsvText(data);
-                    break;
-                default:
-                    resultContent.innerHTML = generateTableHtml(data);
+        function ensureElement(id) {
+            const element = document.getElementById(id);
+            if (!element) {
+                console.error(`Element with id '${id}' not found`);
+                return null;
             }
+            return element;
         }
 
-        function setFormat(format) {
-            currentFormat = format;
-            document.querySelectorAll('.format-option').forEach(opt => {
-                opt.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
-            
-            if (currentResults) {
-                displayFormattedData(currentResults, format);
+        function displayFormattedData(data, format) {
+            const resultContent = document.querySelector('#result .results-content');
+            if (!resultContent) {
+                console.error('Results content element not found');
+                return;
+            }
+
+            try {
+                if (!data || !data.length) {
+                    resultContent.innerHTML = '<p>No data to display</p>';
+                    return;
+                }
+
+                switch(format) {
+                    case 'json':
+                        resultContent.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                        break;
+                    case 'csv':
+                        resultContent.innerHTML = generateCsvText(data);
+                        break;
+                    default:
+                        resultContent.innerHTML = generateTableHtml(data);
+                }
+            } catch (error) {
+                console.error('Error displaying data:', error);
+                resultContent.innerHTML = '<p>Error displaying data</p>';
             }
         }
 
         function displayResults(data, visualizations) {
-            currentResults = data;
-            currentVisualizations = visualizations || { suitable_charts: [] };
-            
-            displayFormattedData(data, currentFormat);
-            document.querySelector('#result').style.display = 'block';
+            try {
+                if (!data) {
+                    showNotification('No data to display', 'error');
+                    return;
+                }
 
-            const canvas = document.getElementById('chartContainer');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const visualizer = new ChartVisualizer(canvas, data, currentVisualizations);
+                const resultElement = document.querySelector('#result');
+                if (resultElement) {
+                    resultElement.style.display = 'block';
+                }
 
-            document.querySelectorAll('.chart-type').forEach(el => {
+                currentResults = data;
+                currentVisualizations = visualizations || { suitable_charts: [] };
+                
+                displayFormattedData(data, currentFormat);
+
+                const chartContainer = document.querySelector('.chart-container');
+                if (chartContainer) {
+                    chartContainer.classList.remove('active');
+                }
+
+                // Update charts if container exists
+                const canvas = document.getElementById('chartContainer');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    const visualizer = new ChartVisualizer(canvas, data, currentVisualizations);
+                    updateChartTypes(visualizer, data);
+                }
+            } catch (error) {
+                console.error('Error displaying results:', error);
+                showNotification('Error displaying results', 'error');
+            }
+        }
+
+        function updateChartTypes(visualizer, data) {
+            const chartTypes = document.querySelectorAll('.chart-type');
+            
+            chartTypes.forEach(el => {
                 el.classList.remove('available', 'active');
                 const oldEl = el.cloneNode(true);
                 el.parentNode.replaceChild(oldEl, el);
@@ -982,6 +1115,11 @@
                             document.querySelectorAll('.chart-type').forEach(c => c.classList.remove('active'));
                             el.classList.add('active');
                             
+                            const chartContainer = document.querySelector('.chart-container');
+                            if (chartContainer) {
+                                chartContainer.classList.add('active');
+                            }
+
                             const suggestion = currentVisualizations.suitable_charts.find(c => c.type === type);
                             if (!suggestion) return;
 
@@ -1144,69 +1282,44 @@
             URL.revokeObjectURL(url);
         }
 
-        async function generateReport() {
-            if (!currentResults) return;
-            
-            try {
-                showLoading();
-                const response = await fetch('http://localhost:5000/generate-report', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ data: currentResults })
-                });
-                
-                const result = await response.json();
-                if (result.error) {
-                    alert(result.error);
-                    return;
-                }
-                
-                window.location.href = `report.html?id=${result.report_id}`;
-            } catch (error) {
-                alert('Error generating report: ' + error.message);
-            } finally {
-                hideLoading();
+        function openAdvancedAnalytics() {
+            if (!currentResults) {
+                alert('Please run a query first to get data for analysis');
+                return;
             }
+
+            // Store the current results in localStorage
+            localStorage.setItem('analysisData', JSON.stringify(currentResults));
+            
+            // Open the analytics dashboard in a new tab
+            window.open('/advanced-analytics', '_blank');
         }
 
-        function openAnalysis() {
-            if (!currentResults) return;
-            
-            try {
-                showLoading();
-                fetch('http://localhost:5000/generate-report', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ data: currentResults })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.error) {
-                        alert(result.error);
-                        return;
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const fileNameElement = document.getElementById('fileName');
+
+            if (fileInput && fileNameElement) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        fileNameElement.textContent = file.name;
+                        fileNameElement.style.color = 'var(--text-primary)';
+                    } else {
+                        fileNameElement.textContent = 'No file chosen';
+                        fileNameElement.style.color = 'var(--text-secondary)';
                     }
-                    window.location.href = `analysis.html?id=${result.report_id}`;
-                })
-                .catch(error => {
-                    alert('Error analyzing data: ' + error.message);
-                })
-                .finally(() => {
-                    hideLoading();
+                    console.log('File selected:', file?.name); // Debug log
                 });
-            } catch (error) {
-                hideLoading();
-                alert('Error: ' + error.message);
+            }
+        });
+
+        function setElementText(elementId, text) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = text;
             }
         }
-
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name || 'No file chosen';
-            document.getElementById('fileName').textContent = fileName;
-        });
 
         function showTab(tab) {
             document.getElementById('uploadSection').style.display = tab === 'upload' ? 'block' : 'none';
@@ -1257,7 +1370,165 @@
             document.getElementById('loading').classList.add('hidden');
         }
 
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            if (!notification) return;
+            
+            // Remove any existing notifications
+            notification.classList.remove('show', 'hide');
+            
+            // Reset the animation by removing and re-adding the element
+            const newNotification = notification.cloneNode(true);
+            notification.parentNode.replaceChild(newNotification, notification);
+            
+            newNotification.textContent = message;
+            newNotification.className = `notification ${type}`;
+            
+            // Show notification
+            setTimeout(() => newNotification.classList.add('show'), 100);
+            
+            // Hide and destroy notification after delay
+            setTimeout(() => {
+                newNotification.classList.add('hide');
+                // Remove the element after animation completes
+                setTimeout(() => {
+                    newNotification.classList.remove('show', 'hide');
+                    newNotification.textContent = '';
+                }, 300);
+            }, 3000);
+        }
+
+        function setFormat(format) {
+            currentFormat = format;
+            const options = document.querySelectorAll('.format-option');
+            options.forEach(opt => opt.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            if (currentResults) {
+                displayFormattedData(currentResults, format);
+            }
+        }
+
+        function scrollToAbout() {
+            document.getElementById('about').scrollIntoView({ behavior: 'smooth' });
+        }
+
         resetUI();
     </script>
+</head>
+<body>
+    <nav class="appbar">
+        <div class="appbar-title">
+            🤖 Talk2DB
+        </div>
+        <div class="appbar-links">
+            <a href="#" class="appbar-link">Home</a>
+            <a href="https://github.com/TrendySloth1001/talk2DB" class="appbar-link" target="_blank">GitHub</a>
+            <a href="#about" class="appbar-link" onclick="scrollToAbout()">About</a>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="tabs">
+            <button onclick="showTab('upload')" id="uploadTab" class="tab-button">
+                Upload File
+            </button>
+            <button onclick="showTab('connect')" id="connectTab" class="tab-button">
+                Connect Database
+            </button>
+        </div>
+
+        <div id="uploadSection" class="form-section">
+            <label class="custom-file-upload">
+                <input type="file" id="fileInput" accept=".db,.xlsx,.xls,.csv">
+                📂 Choose File
+                <span id="fileName" class="file-name">No file chosen</span>
+            </label>
+            <button onclick="uploadFile()" class="tab-button">Upload File</button>
+        </div>
+
+        <div id="connectSection" class="form-section" style="display: none;">
+            <input type="text" class="input-field" id="dbHost" placeholder="Host (e.g., localhost)">
+            <input type="text" class="input-field" id="dbPort" placeholder="Port">
+            <input type="text" class="input-field" id="dbName" placeholder="Database Name">
+            <input type="text" class="input-field" id="dbUser" placeholder="Username">
+            <input type="password" class="input-field" id="dbPassword" placeholder="Password">
+            <button onclick="connectDB()" class="tab-button">Connect Database</button>
+        </div>
+
+        <div id="schemaInfo" class="results"></div>
+
+        <textarea id="nlQuery" class="input-field" placeholder="Enter your query in natural language (e.g., 'Show me total sales for last 7 days')"></textarea>
+        <button onclick="generateQuery()" class="tab-button">Generate & Execute Query</button>
+        
+        <div id="sqlQuery" class="results"></div>
+        
+        <div class="format-selector">
+            <div class="format-option active" onclick="setFormat('table')">
+                📊 Table View
+            </div>
+            <div class="format-option" onclick="setFormat('json')">
+                { } JSON View
+            </div>
+            <div class="format-option" onclick="setFormat('csv')">
+                📑 CSV View
+            </div>
+        </div>
+        <div id="result" class="results">
+            <div class="control-panel">
+                <button class="analyze-btn" onclick="openAdvancedAnalytics()">📊 Advanced Analytics</button>
+            </div>
+            <div class="table-controls">
+                <div class="control-buttons">
+                    <button class="download-btn" onclick="downloadResults()">💾 Download</button>
+                </div>
+            </div>
+            <div class="results-content"></div>
+        </div>
+        <div class="chart-selector">
+            <div class="chart-type" data-type="table">📊 Table</div>
+            <div class="chart-type" data-type="bar">📊 Bar Chart</div>
+            <div class="chart-type" data-type="line">📈 Line Chart</div>
+            <div class="chart-type" data-type="pie">🥧 Pie Chart</div>
+            <div class="chart-type" data-type="scatter">🔴 Scatter Plot</div>
+            <div class="chart-type" data-type="heatmap">🌡️ Heatmap</div>
+            <div class="chart-type" data-type="histogram">📊 Histogram</div>
+            <div class="chart-type" data-type="gauge">⏳ Gauge</div>
+        </div>
+        <div class="chart-container">
+            <canvas id="chartContainer"></canvas>
+        </div>
+
+        <div id="loading" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <span class="loader"></span>
+        </div>
+
+        <div id="notification" class="notification"></div>
+
+        <section id="about" class="about-section">
+            <h2>About Talk2DB</h2>
+            <div class="about-grid">
+                <div class="about-card">
+                    <h3>🎯 Purpose</h3>
+                    <p>Talk2DB is designed to simplify database interactions using natural language processing, making data analysis accessible to everyone.</p>
+                </div>
+                <div class="about-card">
+                    <h3>🔍 Features</h3>
+                    <p>
+                        - Natural language to SQL conversion<br>
+                        - Automatic visualization suggestions<br>
+                        - Advanced analytics capabilities<br>
+                        - Multiple database support
+                    </p>
+                </div>
+                <div class="about-card">
+                    <h3>🛠️ Technology</h3>
+                    <p>Built with Python, Flask, and modern web technologies. Powered by advanced language models for query generation.</p>
+                </div>
+            </div>
+            <footer class="footer">
+                <p>© 2024 Talk2DB. Built with ❤️ for data enthusiasts.</p>
+            </footer>
+        </section>
+    </div>
 </body>
 </html>
